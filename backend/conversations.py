@@ -63,7 +63,8 @@ def conversation_card(path, conversation_id):
         history = [{"id": view["id"], "created_at": view["created_at"], "checklist_id": view["checklist_id"],
                     "checklist_version": view["checklist_version"], "model": view.get("model"),
                     "total": view["totals"]["total"]} for view in views]
-        return {"conversation": json.loads(row["payload"]), "evaluation": views[-1] if views else None,
+        conversation = json.loads(row["payload"])
+        return {"conversation": conversation, "evaluation": views[-1] if views else None,
                 "history": history}
 
 

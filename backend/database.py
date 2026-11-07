@@ -2,6 +2,7 @@
 
 import argparse
 from contextlib import contextmanager
+from datetime import datetime, timezone
 import json
 import os
 from pathlib import Path
@@ -31,10 +32,14 @@ def migrate(path):
     path.parent.mkdir(parents=True, exist_ok=True)
     with connect(path) as connection:
         version = connection.execute("PRAGMA user_version").fetchone()[0]
-        if version > 1:
+        if version > 2:
             raise RuntimeError("Database schema is newer than this application")
         if version == 0:
             sql = (Path(__file__).parent / "migrations" / "001_evaluations.sql").read_text(encoding="utf-8")
+            connection.executescript(sql)
+            version = 1
+        if version == 1:
+            sql = (Path(__file__).parent / "migrations" / "002_checklist_metadata.sql").read_text(encoding="utf-8")
             connection.executescript(sql)
 
 
@@ -60,6 +65,9 @@ def seed_demo(path):
         connection.execute("INSERT OR IGNORE INTO checklist_versions VALUES (?, ?, ?)",
                            ("chat", 1, json.dumps(checklist, ensure_ascii=False)))
         connection.execute("INSERT OR IGNORE INTO channel_checklists VALUES (?, ?, ?)", ("agent chat", "chat", 1))
+        connection.execute("INSERT OR IGNORE INTO checklist_state VALUES (?, ?)", ("chat", 1))
+        connection.execute("INSERT OR IGNORE INTO checklist_version_metadata VALUES (?, ?, ?, ?)",
+                           ("chat", 1, datetime.now(timezone.utc).isoformat(timespec="milliseconds").replace("+00:00", "Z"), "Исходная версия"))
 
 
 if __name__ == "__main__":

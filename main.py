@@ -7,6 +7,7 @@ from backend.database import database_path, migrate
 from backend.evaluations import router
 from backend.groups import router as groups_router
 from backend.conversations import router as conversations_router
+from backend.checklists import router as checklists_router
 
 
 def create_app(db_path=None, organizers_transport=None):
@@ -21,6 +22,7 @@ def create_app(db_path=None, organizers_transport=None):
     application.include_router(router)
     application.include_router(groups_router)
     application.include_router(conversations_router)
+    application.include_router(checklists_router)
 
     @application.get("/health")
     async def health():
