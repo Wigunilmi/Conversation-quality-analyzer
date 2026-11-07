@@ -19,7 +19,7 @@ export async function render(root) {
         <button class="btn" id="load">⤓ Загрузить набор</button>
         <button class="btn" id="up-open">⤒ Загрузить транскрипт</button>
         <a class="btn" id="export" href="/api/export${st.group ? `?group=${encodeURIComponent(st.group)}` : ""}" download="results.json" title="Результаты набора в формате JSON 1.0 (приложение к гайду)">⤓ results.json</a>
-        <select class="input" id="cl" title="Чек-лист для оценки"><option value="">Чек-лист: по каналу</option>${sets.map((x) => `<option value="${esc(x.id)}" ${st.checklist === x.id ? "selected" : ""}>${esc(x.name)} · v${x.active}</option>`).join("")}</select>
+        <select class="input" id="cl" title="Чек-лист для оценки" style="max-width:300px"><option value="">Чек-лист: по каналу</option>${sets.map((x) => `<option value="${esc(x.id)}" ${st.checklist === x.id ? "selected" : ""}>${esc(x.name)} · v${x.active}</option>`).join("")}</select>
         <button class="btn primary" id="batch">▶ Оценить</button>
       </div>
     </div>

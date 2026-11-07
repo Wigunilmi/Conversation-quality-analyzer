@@ -41,6 +41,13 @@ The script exports the latest evaluation of every dialog (decided appeals applie
 and exits non-zero on any problem. Not-evaluated dialogs are written as `status: "error"`, never as zero.
 The same file is available in the UI (button «⤓ results.json») and at `GET /api/export?group=…`.
 
+## Accessibility and themes
+Sidebar → «♿ Доступность» (or Alt+A): text size 90–160 %, high contrast for low vision, colour-vision-safe palette
+(Okabe–Ito, meaning duplicated by ✓ ◐ ✗ icons), readable spacing for dyslexia (WCAG 1.4.12), no animations,
+and «🔊 Озвучить» on a dialog card (Web Speech API, reads the total, gross errors and every verdict).
+OS settings «reduce motion» / «increase contrast» are honoured automatically. Light / dark / system theme;
+Freedom Finance palette (#51AF3D, #0F5431). Skip link, visible focus, keyboard navigation (← → between dialogs, / search).
+
 ## Layout
 | Path | What |
 |---|---|

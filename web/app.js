@@ -4,6 +4,9 @@ import * as card from "./screens/card.js";
 import * as checklists from "./screens/checklists.js";
 import * as appeals from "./screens/appeals.js";
 import { api } from "./lib/api.js";
+import { initPrefs, stopSpeaking } from "./lib/prefs.js";
+
+initPrefs();
 
 const routes = [
   [/^#\/list$/, list, "list"],
@@ -20,7 +23,7 @@ async function route() {
     const m = hash.match(re);
     if (!m) continue;
     for (const a of document.querySelectorAll("#nav a")) a.classList.toggle("on", a.dataset.r === nav);
-    current?.unmount?.();
+    current?.unmount?.(); stopSpeaking();
     current = mod;
     root.innerHTML = '<div class="page"><div class="skel" style="width:220px;height:26px;margin-bottom:18px"></div><div class="skel" style="height:300px"></div></div>';
     try { await mod.render(root, m.slice(1).filter(Boolean).map(decodeURIComponent)); }

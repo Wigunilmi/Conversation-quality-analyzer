@@ -1,5 +1,6 @@
 import { api, esc, toast, verdict, offsetSec, mmss, timeLabel, ring, fmt, LANG, channelIcon, ago } from "../lib/api.js";
 import { refreshBadges } from "../app.js";
+import { speak, stopSpeaking, ttsSupported } from "../lib/prefs.js";
 
 const SPEAKER = { operator: "Оператор", client: "Клиент", bot: "Бот", system: "Система" };
 let tab = "criteria", lastCid = null;
@@ -27,7 +28,8 @@ export async function render(root, [cid]) {
       <a class="btn ghost ${prev ? "" : "hidden"}" href="#/c/${encodeURIComponent(prev || "")}" title="Предыдущий (←)">‹</a>
       <span class="muted small">${pos >= 0 ? `${pos + 1} / ${order.length}` : ""}</span>
       <a class="btn ghost ${next ? "" : "hidden"}" href="#/c/${encodeURIComponent(next || "")}" title="Следующий (→)">›</a>
-      <select class="input" id="cl" title="Чек-лист для оценки"><option value="">Чек-лист: по каналу</option>${sets.map((x) => `<option value="${esc(x.id)}">${esc(x.name)} · v${x.active}</option>`).join("")}</select>
+      <select class="input" id="cl" title="Чек-лист для оценки" style="max-width:300px"><option value="">Чек-лист: по каналу</option>${sets.map((x) => `<option value="${esc(x.id)}">${esc(x.name)} · v${x.active}</option>`).join("")}</select>
+      ${ev && ttsSupported() ? '<button class="btn speak" id="speak" aria-pressed="false" title="Прочитать оценку вслух">🔊 Озвучить</button>' : ""}
       <button class="btn primary" id="eval">${ev ? "↻ Переоценить" : "▶ Оценить"}</button>
     </div>
     <div class="dlg">
@@ -47,6 +49,13 @@ export async function render(root, [cid]) {
   </div>`;
 
   const q = (s) => root.querySelector(s);
+  const sp = q("#speak");
+  if (sp) sp.onclick = () => {
+    if (sp.classList.contains("on")) { stopSpeaking(); sp.classList.remove("on"); sp.setAttribute("aria-pressed", "false"); sp.textContent = "🔊 Озвучить"; return; }
+    const done = () => { sp.classList.remove("on"); sp.setAttribute("aria-pressed", "false"); sp.textContent = "🔊 Озвучить"; };
+    sp.classList.add("on"); sp.setAttribute("aria-pressed", "true"); sp.textContent = "⏹ Остановить";
+    speak(speechParts(ev, conv), "RU", done);
+  };
   q("#eval").onclick = async (e) => {
     e.target.disabled = true; e.target.textContent = "Оцениваю…";
     try { await api("/api/evaluate", { conversation_id: cid, checklist_id: q("#cl").value || undefined }); toast("Оценка обновлена"); } catch (err) { toast(err.message, true); }
@@ -173,3 +182,18 @@ function openAppeal(box, criterionId, ev, root, cid) {
 }
 
 const range = (a, b) => Array.from({ length: Math.max(0, b - a) + 1 }, (_, k) => a + k);
+
+// What the screen reader-independent "Озвучить" button reads: total, gross errors, then each criterion.
+function speechParts(ev, conv) {
+  const cl = ev.checklist, t = ev.totals, out = [];
+  out.push(`Диалог ${conv.conversation_id.replace(/-/g, " ")}. Итог: ${t.total === null ? "не применимо" : fmt(t.total)} из ${t.max_score ?? 100}.`);
+  for (const id of t.critical_errors || []) { const r = ev.final_results.find((x) => x.criterion_id === id); out.push(`Внимание, грубая ошибка. ${r?.explanation || ""}`); }
+  for (const c of cl.criteria) {
+    const r = ev.final_results.find((x) => x.criterion_id === c.id); if (!r) continue;
+    if (c.critical_on === "yes" && r.answer === "yes") continue;
+    const v = verdict(c, r).label.replace("N/A", "не применимо");
+    const why = (r.na ? r.na_reason : r.explanation || "").replace(/\[(\d+)\]/g, "реплика $1").replace(/^[^—]*—\s*[^.]*\.\s*/, "");
+    out.push(`${c.text}: ${v}. ${why}`);
+  }
+  return out;
+}
