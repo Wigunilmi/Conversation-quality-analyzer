@@ -41,9 +41,5 @@ export async function refreshBadges() {
   } catch {}
 }
 
-api("/api/health").then((h) => {
-  document.getElementById("model").textContent = h.llm === "MOCK" ? "MOCK — модель не подключена" : `${h.llm}${h.votes > 1 ? ` · ${h.votes} голоса` : ""}`;
-  document.getElementById("model-dot").classList.toggle("mock", h.llm === "MOCK");
-}).catch(() => {});
 addEventListener("hashchange", route);
 route();

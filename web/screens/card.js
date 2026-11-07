@@ -107,7 +107,7 @@ function resultHtml(ev, conv, history) {
     <div class="secbars">
       ${changed ? `<div class="small">После апелляции: <s class="muted">${fmt(o.total)}</s> → <b>${fmt(t.total)}</b></div>` : ""}
       ${secs.map(([n, v]) => `<div class="secbar"><span class="ink2">${esc(n)}</span><b style="text-align:right">${v === null ? "N/A" : fmt(v, 0)}</b><div class="progress"><i style="width:${v ?? 0}%"></i></div></div>`).join("")}
-      <div class="muted small">Модель: ${esc(ev.model)} · стоимость оценки $${fmt(ev.cost_usd || 0, 4)} · ${fmt(ev.ms / 1000, 1)} с · ${ago(ev.created_at)}</div>
+      <div class="muted small">Стоимость оценки $${fmt(ev.cost_usd || 0, 4)} · ${fmt(ev.ms / 1000, 1)} с · ${ago(ev.created_at)}</div>
     </div>
   </div>
   ${t.critical_errors.length ? `<div class="banner bad"><b>⚠</b><div><b>Обнаружена грубая ошибка.</b> ${t.critical_errors.map((id) => { const r = ev.final_results.find((x) => x.criterion_id === id); return `${esc(r?.explanation || "")} ${(r?.evidence_ids || []).length ? `<span class="chip" data-ev="${r.evidence_ids.join(",")}">↳ ${r.evidence_ids.map((i) => "#" + i).join(" ")}</span>` : ""}`; }).join(" ")}<div class="small">Отмечается отдельно от балла и сохраняется в базе — диалог находится фильтром «⚠ Грубые ошибки».</div></div></div>` : ""}
