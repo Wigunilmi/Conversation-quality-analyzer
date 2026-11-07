@@ -26,6 +26,21 @@ Deploy: `vercel.json` serves `web/` and runs the API as a function (`api/index.m
 
 Model settings: `LLM_BASE_URL`, `LLM_MODEL`, `LLM_API_KEY`, `LLM_VOTES`, `LLM_CONCURRENCY`, `LLM_PRICE_IN` / `LLM_PRICE_OUT` (USD per 1M tokens, used to estimate cost per evaluation).
 
+## Model and cost
+Meta **Muse Spark 1.3** via the Meta API (`muse-spark-1.3`, `reasoning_effort: low`), external API.
+One evaluation = 1 model call (+1 repair call only if the answer breaks the format): about **$0.01–0.03** and 20–55 s per dialog
+($1.25 / $4.25 per 1M input/output tokens). Facts (timings, greeting, system events) and the total are computed in code.
+
+## Results files (appendix «Как сдать результаты», JSON 1.0)
+```
+node tools/export-results.mjs https://cqa-bioc.vercel.app --group DEV  --out results/dev/results.json  --expected 65
+node tools/export-results.mjs https://cqa-bioc.vercel.app --group <PROD> --out results/prod/results.json --expected 10
+```
+The script exports the latest evaluation of every dialog (decided appeals applied), validates the format
+(8 criteria once each, allowed values, 1-based `evidence_turns`, `critical_flag` = `critical`, no duplicate IDs)
+and exits non-zero on any problem. Not-evaluated dialogs are written as `status: "error"`, never as zero.
+The same file is available in the UI (button «⤓ results.json») and at `GET /api/export?group=…`.
+
 ## Layout
 | Path | What |
 |---|---|
