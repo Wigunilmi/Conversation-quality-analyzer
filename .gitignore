@@ -4,3 +4,4 @@
 __pycache__/
 *.py[cod]
 fastapi-migration-plan.md
+/data/*.sqlite3*
