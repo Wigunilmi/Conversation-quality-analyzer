@@ -42,11 +42,10 @@ and exits non-zero on any problem. Not-evaluated dialogs are written as `status:
 The same file is available in the UI (button «⤓ results.json») and at `GET /api/export?group=…`.
 
 ## Accessibility and themes
-One-click profiles in the sidebar (Слабое зрение, Незрячим, Дальтонизм, Дислексия, Без движения, Пожилым); fine-tuning in «♿ Все настройки» (Alt+A): text size 90–160 %, high contrast for low vision, colour-vision-safe palette
-(Okabe–Ito, meaning duplicated by ✓ ◐ ✗ icons), readable spacing for dyslexia (WCAG 1.4.12), no animations,
-and «🔊 Озвучить» on a dialog card (Web Speech API, reads the total, gross errors and every verdict).
-OS settings «reduce motion» / «increase contrast» are honoured automatically. Light / dark / system theme;
-Freedom Finance palette (#51AF3D, #0F5431). Skip link, visible focus, keyboard navigation (← → between dialogs, / search).
+Two one-click modes in the sidebar: **Слабое зрение** (text 130 %, high contrast, thick borders, underlined links)
+and **Дальтонизм** (Okabe–Ito blue / orange instead of green / red, meaning duplicated by ✓ ◐ ✗ icons).
+«🔊 Озвучить» on a dialog card reads the total, gross errors and every verdict aloud (Web Speech API).
+Light / dark / system theme; Freedom Finance palette (#51AF3D, #0F5431). Skip link, visible focus, keyboard navigation.
 
 ## Layout
 | Path | What |
