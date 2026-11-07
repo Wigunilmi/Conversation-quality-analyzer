@@ -1,0 +1,8 @@
+{
+  "$schema": "https://openapi.vercel.sh/vercel.json",
+  "buildCommand": "",
+  "outputDirectory": "web",
+  "rewrites": [{ "source": "/api/:path*", "destination": "/api/index" }],
+  "functions": { "api/index.mjs": { "maxDuration": 300, "includeFiles": "{checklists,prompts}/**" } },
+  "regions": ["fra1"]
+}

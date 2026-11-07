@@ -1,0 +1,11 @@
+{
+  "name": "cqa-bioc",
+  "version": "0.1.0",
+  "description": "Conversation Quality Analytics prototype — Freedom Broker CQA Hackathon",
+  "type": "module",
+  "scripts": {
+    "start": "node --env-file-if-exists=.env server.mjs",
+    "test": "node --test test/*.test.mjs"
+  },
+  "engines": { "node": ">=22.9" }
+}
