@@ -19,7 +19,7 @@ export async function render(root) {
         <button class="btn" id="load">⤓ Загрузить набор</button>
         <button class="btn" id="up-open">⤒ Загрузить диалог</button>
         <a class="btn" id="export" href="/api/export${st.group ? `?group=${encodeURIComponent(st.group)}` : ""}" download="results.json" title="Результаты набора в формате JSON 1.0 (приложение к гайду)">⤓ results.json</a>
-        <select class="input" id="cl" title="Чек-лист для оценки" style="max-width:300px"><option value="">Чек-лист: по каналу</option>${sets.map((x) => `<option value="${esc(x.id)}" ${st.checklist === x.id ? "selected" : ""}>${esc(x.name)} · v${x.active}</option>`).join("")}</select>
+        <select class="input" id="cl" title="По какому чек-листу оценивать. «Авто»: чаты — по чек-листу чатов, звонки — по чек-листу звонков. Выбранный набор применяется только к своим каналам." style="max-width:300px"><option value="">Чек-лист: авто (чаты / звонки)</option>${sets.map((x) => `<option value="${esc(x.id)}" ${st.checklist === x.id ? "selected" : ""}>Чек-лист: ${esc(x.name)} · v${x.active}</option>`).join("")}</select>
         <button class="btn primary" id="batch">▶ Оценить</button>
       </div>
     </div>
@@ -101,7 +101,10 @@ export async function render(root) {
     const upd = (d, n, f) => { q("#bb-t").textContent = `Оценка ${d} / ${n}`; q("#bb-p").style.width = `${(d / n) * 100}%`; q("#bb-f").textContent = `${((Date.now() - batch.t0) / 1000).toFixed(0)} с${f ? ` · ошибок ${f}` : ""}`; };
     upd(0, todo.length, 0);
     q("#bb-x").onclick = () => batch?.ctrl.abort();
-    const res = await runPool(todo, 4, (cid) => api("/api/evaluate", { conversation_id: cid, checklist_id: st.checklist || undefined }), upd, batch.ctrl.signal);
+    // A chosen set only overrides dialogs of its own channels (a chat checklist is never applied to calls).
+    const chosen = sets.find((x) => x.id === st.checklist), chanOf = Object.fromEntries(rows.map((r) => [r.conversation_id, r.channel]));
+    const clFor = (cid) => (chosen && (!chosen.channels.length || chosen.channels.includes(chanOf[cid])) ? chosen.id : undefined);
+    const res = await runPool(todo, 4, (cid) => api("/api/evaluate", { conversation_id: cid, checklist_id: clFor(cid) }), upd, batch.ctrl.signal);
     toast(`Готово: ${res.done} диалогов за ${((Date.now() - batch.t0) / 1000).toFixed(0)} с${res.failed ? `, ошибок ${res.failed}` : ""}`, res.failed > 0);
     batch = null; refreshBadges(); render(root);
   };
@@ -135,7 +138,8 @@ export async function render(root) {
       if (!ids.length) throw new Error(failed.join("; ") || "Нечего загружать");
       let done = 0;
       btn.textContent = `Оцениваю 0/${ids.length}…`;
-      await runPool(ids, 4, (cid) => api("/api/evaluate", { conversation_id: cid, checklist_id: st.checklist || undefined }), (d) => { done = d; btn.textContent = `Оцениваю ${d}/${ids.length}…`; });
+      const chosen = sets.find((x) => x.id === st.checklist), clId = chosen && (!chosen.channels.length || chosen.channels.includes(meta.channel)) ? chosen.id : undefined;
+      await runPool(ids, 4, (cid) => api("/api/evaluate", { conversation_id: cid, checklist_id: clId }), (d) => { done = d; btn.textContent = `Оцениваю ${d}/${ids.length}…`; });
       toast(`Загружено и оценено: ${ids.length}${failed.length ? ` · не загружено: ${failed.length} (${failed[0]})` : ""}`, !!failed.length);
       files = [];
       if (ids.length === 1) location.hash = `#/c/${encodeURIComponent(ids[0])}`;

@@ -28,7 +28,7 @@ export async function render(root, [cid]) {
       <a class="btn ghost ${prev ? "" : "hidden"}" href="#/c/${encodeURIComponent(prev || "")}" title="Предыдущий (←)">‹</a>
       <span class="muted small">${pos >= 0 ? `${pos + 1} / ${order.length}` : ""}</span>
       <a class="btn ghost ${next ? "" : "hidden"}" href="#/c/${encodeURIComponent(next || "")}" title="Следующий (→)">›</a>
-      <select class="input" id="cl" title="Чек-лист для оценки" style="max-width:300px"><option value="">Чек-лист: по каналу</option>${sets.map((x) => `<option value="${esc(x.id)}">${esc(x.name)} · v${x.active}</option>`).join("")}</select>
+      <select class="input" id="cl" title="По какому чек-листу переоценить этот диалог. «Авто» — набор, привязанный к его каналу." style="max-width:300px"><option value="">Чек-лист: авто (${isCall ? "звонки" : "чаты"})</option>${sets.map((x) => `<option value="${esc(x.id)}">Чек-лист: ${esc(x.name)} · v${x.active}</option>`).join("")}</select>
       ${ev && ttsSupported() ? '<button class="btn speak" id="speak" aria-pressed="false" title="Прочитать оценку вслух">🔊 Озвучить</button>' : ""}
       <button class="btn primary" id="eval">${ev ? "↻ Переоценить" : "▶ Оценить"}</button>
     </div>
