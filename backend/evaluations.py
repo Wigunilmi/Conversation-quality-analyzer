@@ -42,6 +42,22 @@ def load_context(path, conversation_id):
             "checklist": json.loads(row["checklist"])}
 
 
+def evaluation_view(connection, row):
+    """Read stored criteria and their historical checklist; never use the active version."""
+    evaluation = json.loads(row["metadata"])
+    results = [json.loads(result["result"]) for result in connection.execute(
+        "SELECT result FROM evaluation_results WHERE evaluation_id = ? ORDER BY position", (row["id"],))]
+    checklist = json.loads(connection.execute(
+        "SELECT checklist FROM checklist_versions WHERE checklist_id = ? AND version = ?",
+        (row["checklist_id"], row["checklist_version"]),
+    ).fetchone()["checklist"])
+    # Appeals storage is not implemented yet; original and final results are identical.
+    return {**evaluation, "results": results, "appeals": [], "final_results": results,
+            "totals": compute_totals(checklist, results), "original_totals": compute_totals(checklist, results),
+            "checklist": checklist, "low_confidence": [result["criterion_id"] for result in results
+                if result.get("confidence") is not None and result["confidence"] < 0.67]}
+
+
 def save_evaluation(path, context, output, elapsed_ms):
     conversation = context["conversation"]
     evaluation = {
@@ -62,17 +78,8 @@ def save_evaluation(path, context, output, elapsed_ms):
         for position, result in enumerate(output["results"]):
             connection.execute("INSERT INTO evaluation_results VALUES (?, ?, ?, ?)",
                                (evaluation["id"], result["criterion_id"], position, json.dumps(result, ensure_ascii=False)))
-        results = [json.loads(row["result"]) for row in connection.execute(
-            "SELECT result FROM evaluation_results WHERE evaluation_id = ? ORDER BY position", (evaluation["id"],))]
-        checklist = json.loads(connection.execute(
-            "SELECT checklist FROM checklist_versions WHERE checklist_id = ? AND version = ?",
-            (evaluation["checklist_id"], evaluation["checklist_version"]),
-        ).fetchone()["checklist"])
-        # No appeals exist in this step; new evaluations have identical original/final results.
-        view = {**evaluation, "results": results, "appeals": [], "final_results": results,
-                "totals": compute_totals(checklist, results), "original_totals": compute_totals(checklist, results),
-                "checklist": checklist, "low_confidence": [r["criterion_id"] for r in results
-                    if r.get("confidence") is not None and r["confidence"] < 0.67]}
+        row = connection.execute("SELECT * FROM evaluations WHERE id = ?", (evaluation["id"],)).fetchone()
+        view = evaluation_view(connection, row)
     return view
 
 
