@@ -91,7 +91,7 @@ def save_evaluation(path, context, output, elapsed_ms):
         "ms": elapsed_ms,
     }
     with connect(path) as connection, connection:
-        connection.execute("INSERT INTO evaluations VALUES (?, ?, ?, ?, ?)",
+        connection.execute("INSERT INTO evaluations (id, conversation_id, checklist_id, checklist_version, metadata) VALUES (?, ?, ?, ?, ?)",
                            (evaluation["id"], evaluation["conversation_id"], evaluation["checklist_id"],
                             evaluation["checklist_version"], json.dumps(evaluation, ensure_ascii=False)))
         for position, result in enumerate(output["results"]):

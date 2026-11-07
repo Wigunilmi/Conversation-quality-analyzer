@@ -6,4 +6,5 @@ __pycache__/
 fastapi-migration-plan.md
 /data/*.sqlite3*
 /.env
+/.env.*
 /api.txt

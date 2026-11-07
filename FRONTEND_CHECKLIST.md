@@ -18,12 +18,14 @@
   `https://frontend.example.com`, без пути и завершающего `/`. Для локальной
   разработки отдельно добавить точный origin, например `http://localhost:5173`.
   Схема, хост и порт учитываются; домен бэкенда не заменяет origin фронта.
-- **Сейчас CORSMiddleware отсутствует**: preflight проверен и вернул 405 без
-  `Access-Control-Allow-Origin`. До прямого браузерного доступа добавить middleware
-  с точными `allow_origins`, методами `GET`/`POST` и заголовками
-  `Content-Type`/`Authorization`. Переменной окружения для CORS в коде пока нет.
+- CORS теперь настраивается одним точным `FRONTEND_ORIGIN` без пути и wildcard;
+  разрешены `GET`/`POST` и заголовки `Content-Type`/`Authorization`. При настроенном
+  origin preflight не требует токена. При заданном `API_AUTH_TOKEN` сами `/api/*`
+  требуют Bearer-заголовок; на Vercel оба параметра обязательны. Это сервисный токен,
+  не пользовательская авторизация: не помещать его в публичный JS-бандл.
   [Документация FastAPI](https://fastapi.tiangolo.com/tutorial/cors/).
-- На деплое `CQA_DATABASE_PATH` должен указывать на сохраняемый диск. Ключ модели
+- Для Vercel используйте Postgres `DATABASE_URL` и [отдельные миграции](./DEPLOY_VERCEL.md).
+  `CQA_DATABASE_PATH` остаётся только локальным SQLite. Ключ модели, строки БД
   и `CQA_API_URL` задаются только на сервере, браузеру не передаются.
 
 ## Короткий сценарий приёмки

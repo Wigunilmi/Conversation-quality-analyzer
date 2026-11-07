@@ -35,9 +35,9 @@ def required_text(body, name):
 
 def list_appeals(path, status=None):
     with connect(path) as connection:
-        rows = connection.execute("""SELECT a.*, e.conversation_id FROM appeals a
-            JOIN evaluations e ON e.id = a.evaluation_id
-            WHERE (? IS NULL OR ? = '' OR a.status = ?) ORDER BY a.rowid DESC""", (status, status, status))
+        query = "SELECT a.*, e.conversation_id FROM appeals a JOIN evaluations e ON e.id = a.evaluation_id"
+        rows = connection.execute(query + (" WHERE a.status = ?" if status else "") + " ORDER BY a.rowid DESC",
+                                  (status,) if status else ())
         return [{**appeal_view(row), "conversation_id": row["conversation_id"]} for row in rows]
 
 

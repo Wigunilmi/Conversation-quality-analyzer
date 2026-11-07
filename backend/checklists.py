@@ -61,7 +61,7 @@ def add_version(connection, checklist_id, version, checklist, note):
 def assign_channels(connection, checklist_id, version, channels):
     connection.execute("DELETE FROM channel_checklists WHERE checklist_id = ?", (checklist_id,))
     for channel in channels:
-        connection.execute("""INSERT INTO channel_checklists VALUES (?, ?, ?)
+        connection.execute("""INSERT INTO channel_checklists (channel, checklist_id, active_version) VALUES (?, ?, ?)
             ON CONFLICT(channel) DO UPDATE SET checklist_id = excluded.checklist_id,
             active_version = excluded.active_version""", (channel, checklist_id, version))
 
@@ -98,7 +98,7 @@ def create_set(path, body):
         connection.execute("BEGIN IMMEDIATE")
         if connection.execute("SELECT 1 FROM checklists WHERE id = ?", (checklist_id,)).fetchone():
             raise ChecklistError(409, "id exists")
-        connection.execute("INSERT INTO checklists VALUES (?, ?)", (checklist_id, name))
+        connection.execute("INSERT INTO checklists (id, name) VALUES (?, ?)", (checklist_id, name))
         add_version(connection, checklist_id, 1, checklist, note)
         assign_channels(connection, checklist_id, 1, channels)
     return {"id": checklist_id}
