@@ -17,20 +17,20 @@ export async function render(root) {
       <div class="toolbar" style="margin:0">
         <input class="input" id="gid" placeholder="group_id" value="${esc(st.group || "DEV")}" style="width:150px" />
         <button class="btn" id="load">⤓ Загрузить набор</button>
-        <button class="btn" id="up-open">⤒ Загрузить транскрипт</button>
+        <button class="btn" id="up-open">⤒ Загрузить диалог</button>
         <a class="btn" id="export" href="/api/export${st.group ? `?group=${encodeURIComponent(st.group)}` : ""}" download="results.json" title="Результаты набора в формате JSON 1.0 (приложение к гайду)">⤓ results.json</a>
         <select class="input" id="cl" title="Чек-лист для оценки" style="max-width:300px"><option value="">Чек-лист: по каналу</option>${sets.map((x) => `<option value="${esc(x.id)}" ${st.checklist === x.id ? "selected" : ""}>${esc(x.name)} · v${x.active}</option>`).join("")}</select>
         <button class="btn primary" id="batch">▶ Оценить</button>
       </div>
     </div>
     <div class="card card-b stack hidden" id="up" style="margin-bottom:12px">
-      <b>Загрузить транскрипт вручную</b>
+      <b>Загрузить диалоги</b>
       <div class="small muted">JSON в формате API организаторов (одна запись, массив или ответ целиком) или текст — по реплике на строку: <span class="mono">00:12 operator: Здравствуйте…</span> (роли: client, operator, bot, system).</div>
-      <div class="toolbar" style="margin:0"><input type="file" id="up-file" accept=".json,.txt" class="input" />
+      <div class="toolbar" style="margin:0"><label class="btn" for="up-file">📄 Выбрать файлы</label><input type="file" id="up-file" accept=".json,.txt" multiple hidden /><span class="small muted" id="up-files">можно несколько сразу или перетащить сюда</span>
         <select class="input" id="up-ch"><option value="agent chat">💬 Чат</option><option value="voice call">📞 Звонок</option></select>
         <select class="input" id="up-lang"><option value="">Язык: определить</option><option>RU</option><option>KZ</option><option>EN</option></select>
-        <input class="input" id="up-id" placeholder="ID диалога (необязательно)" /></div>
-      <textarea class="input mono" id="up-text" rows="6" placeholder="…или вставьте транскрипт сюда"></textarea>
+        <input class="input" id="up-id" placeholder="ID диалога (для одного, необязательно)" /></div>
+      <textarea class="input mono" id="up-text" rows="6" placeholder="…или вставьте один диалог текстом сюда"></textarea>
       <div style="display:flex;gap:8px"><button class="btn primary" id="up-go">Загрузить и оценить</button><button class="btn ghost" id="up-x">Отмена</button></div>
     </div>
     <div class="card batchbar ${batch ? "" : "hidden"}" id="bb"><b id="bb-t"></b><div class="progress"><i id="bb-p"></i></div><span class="muted small" id="bb-f"></span><button class="btn ghost danger" id="bb-x">Остановить</button></div>
@@ -109,17 +109,38 @@ export async function render(root) {
   q("#cl").onchange = (e) => { st.checklist = e.target.value; };
   q("#up-open").onclick = () => q("#up").classList.toggle("hidden");
   q("#up-x").onclick = () => q("#up").classList.add("hidden");
-  q("#up-file").onchange = async (e) => { const f = e.target.files[0]; if (f) q("#up-text").value = await f.text(); };
+  // One or many files (JSON in the organizers' format or text lines), or one pasted dialog.
+  let files = [];
+  const showFiles = () => { q("#up-files").textContent = files.length ? `${files.length} ${((n) => (n % 10 === 1 && n % 100 !== 11 ? "файл" : n % 10 >= 2 && n % 10 <= 4 && (n % 100 < 12 || n % 100 > 14) ? "файла" : "файлов"))(files.length)}: ${files.map((f) => f.name).join(", ")}` : "можно несколько сразу или перетащить сюда"; q("#up-id").disabled = files.length > 1; };
+  q("#up-file").onchange = (e) => { files = [...e.target.files]; showFiles(); };
+  const up = q("#up");
+  up.ondragover = (e) => { e.preventDefault(); up.classList.add("drop"); };
+  up.ondragleave = () => up.classList.remove("drop");
+  up.ondrop = (e) => { e.preventDefault(); up.classList.remove("drop"); files = [...e.dataTransfer.files].filter((f) => /\.(json|txt)$/i.test(f.name)); showFiles(); };
   q("#up-go").onclick = async (e) => {
+    const btn = e.target, meta = { channel: q("#up-ch").value, language: q("#up-lang").value || undefined };
+    const reset = () => { btn.disabled = false; btn.textContent = "Загрузить и оценить"; };
     try {
-      const body = parseTranscript(q("#up-text").value, { channel: q("#up-ch").value, language: q("#up-lang").value || undefined, conversation_id: q("#up-id").value.trim() || undefined });
-      e.target.disabled = true; e.target.textContent = "Оцениваю…";
-      const r = await api("/api/conversations", body);
-      for (const cid of r.ids) await api("/api/evaluate", { conversation_id: cid, checklist_id: st.checklist || undefined });
-      toast(`Загружено и оценено: ${r.ids.length}`);
-      location.hash = r.ids.length === 1 ? `#/c/${encodeURIComponent(r.ids[0])}` : "#/list";
-      if (r.ids.length > 1) { st.group = "UPLOAD"; render(root); }
-    } catch (err) { toast(err.message, true); e.target.disabled = false; e.target.textContent = "Загрузить и оценить"; }
+      const sources = files.length ? await Promise.all(files.map(async (f) => ({ name: f.name, text: await f.text() }))) : [{ name: "", text: q("#up-text").value }];
+      const single = sources.length === 1 ? q("#up-id").value.trim() : "";
+      btn.disabled = true; btn.textContent = "Загружаю…";
+      const ids = [], failed = [];
+      for (const src of sources) {
+        try {
+          const id = single || (src.name ? src.name.replace(/\.[^.]+$/, "") : undefined);
+          const r = await api("/api/conversations", parseTranscript(src.text, { ...meta, conversation_id: id }));
+          ids.push(...r.ids);
+        } catch (err) { failed.push(`${src.name || "текст"}: ${err.message}`); }
+      }
+      if (!ids.length) throw new Error(failed.join("; ") || "Нечего загружать");
+      let done = 0;
+      btn.textContent = `Оцениваю 0/${ids.length}…`;
+      await runPool(ids, 4, (cid) => api("/api/evaluate", { conversation_id: cid, checklist_id: st.checklist || undefined }), (d) => { done = d; btn.textContent = `Оцениваю ${d}/${ids.length}…`; });
+      toast(`Загружено и оценено: ${ids.length}${failed.length ? ` · не загружено: ${failed.length} (${failed[0]})` : ""}`, !!failed.length);
+      files = [];
+      if (ids.length === 1) location.hash = `#/c/${encodeURIComponent(ids[0])}`;
+      else { st.group = "UPLOAD"; sessionStorage.setItem("cqa-group", st.group); render(root); }
+    } catch (err) { toast(err.message, true); reset(); }
   };
 
   keyHandler = (e) => { if (e.key === "/" && document.activeElement.tagName !== "INPUT") { e.preventDefault(); q("#q").focus(); } };
