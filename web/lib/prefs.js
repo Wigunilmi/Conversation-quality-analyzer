@@ -13,15 +13,34 @@ export function applyPrefs(p = read()) {
   document.querySelectorAll("[data-theme-set]").forEach((b) => { const on = (p.theme || "auto") === b.dataset.themeSet; b.classList.toggle("on", on); b.setAttribute("aria-checked", String(on)); });
   document.querySelectorAll("[data-pref]").forEach((c) => (c.checked = !!p[c.dataset.pref]));
   const z = document.getElementById("z-val"); if (z) z.textContent = `${Math.round((p.zoom || 1) * 100)}%`;
-  const n = ["contrast", "cvd", "readable", "still"].filter((k) => p[k]).length + (p.zoom && p.zoom !== 1 ? 1 : 0);
+  const n = ["contrast", "cvd", "readable", "still", "autospeak"].filter((k) => p[k]).length + (p.zoom && p.zoom !== 1 ? 1 : 0);
+  document.querySelectorAll("[data-profile]").forEach((b) => { const on = p.profile === b.dataset.profile; b.classList.toggle("on", on); b.setAttribute("aria-pressed", String(on)); });
   const badge = document.getElementById("a11y-on"); if (badge) { badge.textContent = n; badge.classList.toggle("hidden", !n); }
 }
-const set = (patch) => { const p = { ...read(), ...patch }; write(p); applyPrefs(p); };
+const set = (patch) => { const p = { ...read(), ...patch, profile: undefined }; write(p); applyPrefs(p); };
+
+// One-click profiles: each replaces all accessibility settings at once (the theme is kept).
+const MODES = ["contrast", "cvd", "readable", "still", "autospeak", "zoom"];
+export const PROFILES = {
+  lowvision: { contrast: true, zoom: 1.3 },
+  blind: { contrast: true, zoom: 1.2, autospeak: true, still: true },
+  colorblind: { cvd: true },
+  dyslexia: { readable: true, zoom: 1.1 },
+  calm: { still: true },
+  senior: { zoom: 1.25, readable: true, still: true },
+};
+function setProfile(name) {
+  const cur = read(), base = Object.fromEntries(Object.entries(cur).filter(([k]) => !MODES.includes(k) && k !== "profile"));
+  const p = cur.profile === name ? base : { ...base, ...PROFILES[name], profile: name };
+  write(p); applyPrefs(p);
+}
+export const prefs = () => read();
 
 export function initPrefs() {
   applyPrefs();
   mq.addEventListener?.("change", () => applyPrefs());
   document.querySelectorAll("[data-theme-set]").forEach((b) => (b.onclick = () => set({ theme: b.dataset.themeSet === "auto" ? undefined : b.dataset.themeSet })));
+  document.querySelectorAll("[data-profile]").forEach((b) => (b.onclick = () => setProfile(b.dataset.profile)));
   document.querySelectorAll("[data-pref]").forEach((c) => (c.onchange = () => set({ [c.dataset.pref]: c.checked || undefined })));
   const zoom = (z) => set({ zoom: z === 1 ? undefined : z });
   const cur = () => read().zoom || 1;

@@ -273,3 +273,21 @@ pre.code { background: var(--panel-2); border: 1px solid var(--line); border-rad
 /* No motion: user switch or OS setting. */
 :root[data-still="on"] *, :root[data-still="on"] *::before, :root[data-still="on"] *::after { animation: none !important; transition: none !important; scroll-behavior: auto !important; }
 @media (prefers-reduced-motion: reduce) { *, *::before, *::after { animation-duration: .001ms !important; transition-duration: .001ms !important; scroll-behavior: auto !important; } }
+
+/* One-click accessibility profiles */
+.side-a11y { padding: 10px 10px 4px; margin-top: 8px; border-top: 1px solid var(--side-line); display: grid; grid-template-columns: 1fr; gap: 4px; }
+.side-a11y-t { grid-column: 1 / -1; font-size: 11px; text-transform: uppercase; letter-spacing: .5px; color: var(--side-muted); font-weight: 600; padding: 0 4px 2px; }
+.pmini { display: flex; align-items: center; gap: 10px; padding: 7px 12px; border-radius: 9px; border: 1px solid var(--side-line); background: transparent; color: var(--side-ink); cursor: pointer; font-size: 13px; font-weight: 500; text-align: left; line-height: 1.2; }
+.pmini.on::after { content: "✓"; margin-left: auto; }
+.pmini span { font-size: 15px; }
+.pmini:hover { border-color: var(--brand); }
+.pmini.on { background: var(--brand); border-color: var(--brand); color: #08130C; font-weight: 700; }
+.profiles { display: grid; grid-template-columns: 1fr 1fr; gap: 8px; }
+.profile { display: grid; grid-template-columns: 30px 1fr; grid-template-rows: auto auto; column-gap: 8px; align-items: center; text-align: left; padding: 10px; border: 2px solid var(--line); border-radius: 12px; background: var(--panel); cursor: pointer; color: var(--ink); }
+.profile .pi { grid-row: 1 / 3; font-size: 22px; text-align: center; }
+.profile small { color: var(--muted); font-size: 11.5px; line-height: 1.3; }
+.profile:hover { border-color: var(--accent); }
+.profile.on { border-color: var(--btn); background: var(--accent-soft); box-shadow: inset 0 0 0 1px var(--btn); }
+.profile.on b::after { content: " ✓"; color: var(--accent); }
+details.fine summary { cursor: pointer; font-weight: 600; color: var(--ink-2); }
+@media (max-width: 900px) { .side-a11y { grid-template-columns: repeat(3, 1fr); width: 100%; border-top: 0; margin: 0; } }

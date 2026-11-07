@@ -42,7 +42,7 @@ and exits non-zero on any problem. Not-evaluated dialogs are written as `status:
 The same file is available in the UI (button «⤓ results.json») and at `GET /api/export?group=…`.
 
 ## Accessibility and themes
-Sidebar → «♿ Доступность» (or Alt+A): text size 90–160 %, high contrast for low vision, colour-vision-safe palette
+One-click profiles in the sidebar (Слабое зрение, Незрячим, Дальтонизм, Дислексия, Без движения, Пожилым); fine-tuning in «♿ Все настройки» (Alt+A): text size 90–160 %, high contrast for low vision, colour-vision-safe palette
 (Okabe–Ito, meaning duplicated by ✓ ◐ ✗ icons), readable spacing for dyslexia (WCAG 1.4.12), no animations,
 and «🔊 Озвучить» on a dialog card (Web Speech API, reads the total, gross errors and every verdict).
 OS settings «reduce motion» / «increase contrast» are honoured automatically. Light / dark / system theme;

@@ -22,11 +22,20 @@
         <a href="#/checklists" data-r="checklists"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M9 11l3 3L22 4"/><path d="M21 12v7a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h11"/></svg>Чек-листы</a>
         <a href="#/appeals" data-r="appeals"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M12 3l9 4-9 4-9-4 9-4z"/><path d="M3 12l9 4 9-4"/><path d="M3 17l9 4 9-4"/></svg>Апелляции<span class="count hidden" id="ap-count"></span></a>
       </nav>
+      <div class="side-a11y" role="group" aria-labelledby="side-a11y-t">
+        <div class="side-a11y-t" id="side-a11y-t">Режим доступности</div>
+        <button class="pmini" data-profile="lowvision" aria-pressed="false" title="Крупный текст и высокий контраст"><span aria-hidden="true">👁</span>Слабое зрение</button>
+        <button class="pmini" data-profile="blind" aria-pressed="false" title="Оценка диалога читается вслух автоматически"><span aria-hidden="true">🔊</span>Незрячим</button>
+        <button class="pmini" data-profile="colorblind" aria-pressed="false" title="Синий и оранжевый вместо зелёного и красного, значки"><span aria-hidden="true">🎨</span>Дальтонизм</button>
+        <button class="pmini" data-profile="dyslexia" aria-pressed="false" title="Широкие интервалы между буквами и строками"><span aria-hidden="true">📖</span>Дислексия</button>
+        <button class="pmini" data-profile="calm" aria-pressed="false" title="Без анимаций и движения"><span aria-hidden="true">🌀</span>Без движения</button>
+        <button class="pmini" data-profile="senior" aria-pressed="false" title="Крупно, спокойно, просторно"><span aria-hidden="true">🧓</span>Пожилым</button>
+      </div>
       <div class="side-foot">
         <div class="seg theme-seg" role="radiogroup" aria-label="Тема оформления">
           <button data-theme-set="light" role="radio" aria-label="Светлая тема" title="Светлая тема">☀</button><button data-theme-set="dark" role="radio" aria-label="Тёмная тема" title="Тёмная тема">☾</button><button data-theme-set="auto" role="radio" aria-label="Тема как в системе" title="Как в системе">Авто</button>
         </div>
-        <button class="btn a11y-open" id="a11y-open" aria-haspopup="dialog" aria-controls="a11y-panel"><span aria-hidden="true">♿</span> Доступность<span class="a11y-on hidden" id="a11y-on"></span></button>
+        <button class="btn a11y-open" id="a11y-open" aria-haspopup="dialog" aria-controls="a11y-panel"><span aria-hidden="true">♿</span> Все настройки<span class="a11y-on hidden" id="a11y-on"></span></button>
         <div class="model-badge"><span class="dot" id="model-dot"></span><span id="model">…</span></div>
         <div class="muted">Клавиши: <kbd>←</kbd> <kbd>→</kbd> соседний диалог, <kbd>/</kbd> поиск</div>
       </div>
@@ -35,14 +44,20 @@
   </div>
   <div class="a11y-panel card" id="a11y-panel" role="dialog" aria-modal="false" aria-labelledby="a11y-title" hidden>
     <div class="a11y-head"><b id="a11y-title">Доступность</b><button class="btn ghost" id="a11y-close" aria-label="Закрыть">✕</button></div>
-    <p class="small muted">Настройки сохраняются в этом браузере. Системные «уменьшить движение» и «повысить контраст» учитываются автоматически.</p>
+    <details class="fine" open>
+      <summary>Тонкая настройка (готовые режимы — в меню слева, одним нажатием)</summary>
+      <div class="stack" style="margin-top:10px">
     <div class="a11y-row"><span>Размер текста</span><div class="seg"><button id="z-out" aria-label="Уменьшить текст">A−</button><button id="z-reset" aria-label="Обычный размер"><span id="z-val">100%</span></button><button id="z-in" aria-label="Увеличить текст">A+</button></div></div>
     <label class="a11y-opt"><input type="checkbox" data-pref="contrast" /><span><b>Высокий контраст</b><small>Для слабовидящих: чёрный текст, толстые рамки, крупные кнопки, подчёркнутые ссылки</small></span></label>
     <label class="a11y-opt"><input type="checkbox" data-pref="cvd" /><span><b>Для дальтоников</b><small>Синий / оранжевый вместо зелёного / красного; смысл дублируется значками</small></span></label>
     <label class="a11y-opt"><input type="checkbox" data-pref="readable" /><span><b>Удобное чтение</b><small>При дислексии: больше интервалы между буквами, словами и строками</small></span></label>
     <label class="a11y-opt"><input type="checkbox" data-pref="still" /><span><b>Без анимаций</b><small>При укачивании и вестибулярных нарушениях</small></span></label>
     <div class="a11y-row"><span>Озвучка</span><span class="small muted">кнопка «🔊 Озвучить» в карточке диалога читает итог, грубые ошибки и вердикты вслух</span></div>
-    <button class="btn" id="a11y-reset">Сбросить всё</button>
+        <label class="a11y-opt"><input type="checkbox" data-pref="autospeak" /><span><b>Читать оценку вслух автоматически</b><small>При открытии диалога</small></span></label>
+        <p class="small muted">Настройки сохраняются в этом браузере. Системные «уменьшить движение» и «повысить контраст» учитываются автоматически.</p>
+      </div>
+    </details>
+    <button class="btn" id="a11y-reset">↺ Обычный вид</button>
   </div>
   <div id="toast" class="toast" role="status" aria-live="polite" hidden></div>
   <script type="module" src="/app.js"></script>

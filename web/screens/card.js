@@ -1,6 +1,6 @@
 import { api, esc, toast, verdict, offsetSec, mmss, timeLabel, ring, fmt, LANG, channelIcon, ago } from "../lib/api.js";
 import { refreshBadges } from "../app.js";
-import { speak, stopSpeaking, ttsSupported } from "../lib/prefs.js";
+import { speak, stopSpeaking, ttsSupported, prefs } from "../lib/prefs.js";
 
 const SPEAKER = { operator: "Оператор", client: "Клиент", bot: "Бот", system: "Система" };
 let tab = "criteria", lastCid = null;
@@ -56,6 +56,7 @@ export async function render(root, [cid]) {
     sp.classList.add("on"); sp.setAttribute("aria-pressed", "true"); sp.textContent = "⏹ Остановить";
     speak(speechParts(ev, conv), "RU", done);
   };
+  if (sp && prefs().autospeak) sp.click(); // «Незрячим»: read the evaluation as soon as the dialog opens
   q("#eval").onclick = async (e) => {
     e.target.disabled = true; e.target.textContent = "Оцениваю…";
     try { await api("/api/evaluate", { conversation_id: cid, checklist_id: q("#cl").value || undefined }); toast("Оценка обновлена"); } catch (err) { toast(err.message, true); }
