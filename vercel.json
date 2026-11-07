@@ -1,6 +1,9 @@
 {
   "$schema": "https://openapi.vercel.sh/vercel.json",
   "functions": {
-    "main.py": { "maxDuration": 60 }
+    "main.py": {
+      "maxDuration": 60,
+      "excludeFiles": "{.tmp/**,.venv/**,data/**,backend/tests/**,test/**,архив интегратора (заира)/**,.env*,api.txt}"
+    }
   }
 }
