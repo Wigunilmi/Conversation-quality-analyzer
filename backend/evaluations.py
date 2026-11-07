@@ -90,9 +90,14 @@ async def evaluate_conversation(body: EvaluateRequest, request: Request):
         context = await run_in_threadpool(load_context, path, body.conversation_id)
         if context is None:
             return JSONResponse(status_code=404, content={"error": f"conversation {body.conversation_id} not loaded"})
-        start = perf_counter()
-        output = await run_in_threadpool(evaluator.evaluate, context["conversation"], context["checklist"])
-        elapsed_ms = round((perf_counter() - start) * 1000)
-        return await run_in_threadpool(save_evaluation, path, context, output, elapsed_ms)
+        return await run_evaluation(path, context)
     except Exception as exc:
         return JSONResponse(status_code=500, content={"error": str(exc)})
+
+
+async def run_evaluation(path, context):
+    """Shared single/batch pipeline; context already pins the conversation and checklist version."""
+    start = perf_counter()
+    output = await run_in_threadpool(evaluator.evaluate, context["conversation"], context["checklist"])
+    elapsed_ms = round((perf_counter() - start) * 1000)
+    return await run_in_threadpool(save_evaluation, path, context, output, elapsed_ms)

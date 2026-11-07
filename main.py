@@ -8,6 +8,7 @@ from backend.evaluations import router
 from backend.groups import router as groups_router
 from backend.conversations import router as conversations_router
 from backend.checklists import router as checklists_router
+from backend.batch import router as batch_router
 
 
 def create_app(db_path=None, organizers_transport=None):
@@ -23,6 +24,7 @@ def create_app(db_path=None, organizers_transport=None):
     application.include_router(groups_router)
     application.include_router(conversations_router)
     application.include_router(checklists_router)
+    application.include_router(batch_router)
 
     @application.get("/health")
     async def health():
