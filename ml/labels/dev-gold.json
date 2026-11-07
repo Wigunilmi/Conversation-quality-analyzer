@@ -1,0 +1,15 @@
+[
+  { "conversation_id": "p1-ru-002", "author": "Claude (черновик, ML проверить)", "results": { "c01_contact": "yes", "c02_need": "yes", "c03_identification": "na", "c04_consultation": 20, "c05_empathy": "yes", "c06_management": 10, "c07_closing": "yes", "c08_gross": "no" } },
+  { "conversation_id": "p1-ru-003", "author": "Claude (черновик, ML проверить)", "results": { "c01_contact": "yes", "c02_need": "yes", "c03_identification": "na", "c04_consultation": 10, "c05_empathy": "yes", "c06_management": 7, "c07_closing": "no", "c08_gross": "no" } },
+  { "conversation_id": "p1-ru-005", "author": "Claude (черновик, ML проверить)", "results": { "c01_contact": "yes", "c03_identification": "na", "c04_consultation": 20, "c05_empathy": "yes", "c06_management": 4, "c07_closing": "yes", "c08_gross": "no" } },
+  { "conversation_id": "p1-ru-006", "author": "Claude (черновик, ML проверить)", "results": { "c01_contact": "yes", "c02_need": "yes", "c03_identification": "yes", "c04_consultation": 20, "c05_empathy": "yes", "c06_management": 10, "c07_closing": "yes", "c08_gross": "no" } },
+  { "conversation_id": "p1-ru-014", "author": "Claude (черновик, ML проверить)", "results": { "c01_contact": "no", "c02_need": "no", "c03_identification": "na", "c04_consultation": 20, "c06_management": 7, "c07_closing": "no", "c08_gross": "no" } },
+  { "conversation_id": "p1-ru-020", "author": "Claude (черновик, ML проверить)", "results": { "c01_contact": "yes", "c02_need": "na", "c03_identification": "na", "c04_consultation": 20, "c05_empathy": "yes", "c06_management": 10, "c07_closing": "no", "c08_gross": "no" } },
+  { "conversation_id": "p1-ru-022", "author": "Claude (черновик, ML проверить)", "results": { "c01_contact": "yes", "c03_identification": "na", "c04_consultation": 0, "c07_closing": "no", "c08_gross": "yes" } },
+  { "conversation_id": "p1-ru-023", "author": "Claude (черновик, ML проверить)", "results": { "c01_contact": "yes", "c02_need": "na", "c03_identification": "na", "c04_consultation": 20, "c06_management": 10, "c07_closing": "no", "c08_gross": "yes" } },
+  { "conversation_id": "p1-kz-008", "author": "Claude (черновик, ML проверить)", "results": { "c01_contact": "no", "c02_need": "no", "c03_identification": "na", "c04_consultation": 20, "c06_management": 7, "c07_closing": "no", "c08_gross": "no" } },
+  { "conversation_id": "p1-kz-013", "author": "Claude (черновик, ML проверить)", "results": { "c08_gross": "yes" } },
+  { "conversation_id": "p1-en-007", "author": "Claude (черновик, ML проверить)", "results": { "c01_contact": "yes", "c03_identification": "na", "c04_consultation": 10, "c05_empathy": "yes", "c06_management": 7, "c07_closing": "no", "c08_gross": "no" } },
+  { "conversation_id": "p1-en-013", "author": "Claude (черновик, ML проверить)", "results": { "c08_gross": "yes" } },
+  { "conversation_id": "p1-en-015", "author": "Claude (черновик, ML проверить)", "results": { "c01_contact": "no", "c02_need": "no", "c03_identification": "na", "c04_consultation": 15, "c06_management": 4, "c07_closing": "no", "c08_gross": "no" } }
+]
