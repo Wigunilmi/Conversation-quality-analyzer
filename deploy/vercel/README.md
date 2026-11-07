@@ -18,7 +18,8 @@ Roll back: delete `BACKEND_URL` → Redeploy.
 2. `node tools/seed-backend.mjs https://<backend>` — creates the chat / call checklist sets and loads DEV (idempotent).
 3. `node tools/check-backend.mjs https://<backend>` through the bridge, e.g. locally:
    `BACKEND_URL=https://<backend> npm start` then `node tools/check-backend.mjs http://localhost:3000`.
-4. Vercel → Environment Variables → `BACKEND_URL=https://<backend>` → Redeploy. Remove it to fall back to the built-in API.
+4. Vercel → Environment Variables → `BACKEND_URL=https://<backend>` and `BACKEND_TOKEN=<the backend API_AUTH_TOKEN>` (Sensitive) → Redeploy. Remove `BACKEND_URL` to fall back to the built-in API.
+   The token is added server-side as `Authorization: Bearer …`; the browser never sees it, so the backend needs no CORS for this site.
 
 `lib/bridge.mjs` answers the routes the backend does not have yet (`/api/health`, `/api/groups`, audio,
 `/api/export`, gross-error flag/reason and `?gross=1`) from the backend's own data; everything else is proxied.

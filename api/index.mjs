@@ -8,7 +8,9 @@ export default async function handler(req, res) {
   const backend = process.env.BACKEND_URL?.replace(/\/$/, "");
   if (!backend) return handleApi(req, res);
   if (req.url.startsWith("/api/index")) req.url = req.headers["x-forwarded-uri"] || req.headers["x-original-url"] || req.headers["x-invoke-path"] || req.url;
-  if (await bridge(req, res, backend)) return; // routes the backend does not implement yet
+  // Service token of the backend (its API_AUTH_TOKEN). Stays on the server: the browser never sees it.
+  const auth = process.env.BACKEND_TOKEN ? { authorization: `Bearer ${process.env.BACKEND_TOKEN}` } : {};
+  if (await bridge(req, res, backend, auth)) return; // routes the backend does not implement yet
   try {
     let body;
     if (req.method !== "GET" && req.method !== "HEAD") {
@@ -16,7 +18,7 @@ export default async function handler(req, res) {
       else { const chunks = []; for await (const c of req) chunks.push(c); body = Buffer.concat(chunks).toString("utf8") || undefined; } // local server: raw stream
     }
     const path = req.url;
-    const r = await fetch(backend + path, { method: req.method, headers: { "content-type": req.headers["content-type"] || "application/json" }, body });
+    const r = await fetch(backend + path, { method: req.method, headers: { "content-type": req.headers["content-type"] || "application/json", ...auth }, body });
     res.statusCode = r.status;
     for (const h of ["content-type", "content-disposition"]) if (r.headers.get(h)) res.setHeader(h, r.headers.get(h));
     res.end(Buffer.from(await r.arrayBuffer()));
