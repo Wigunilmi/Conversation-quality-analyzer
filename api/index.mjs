@@ -2,15 +2,20 @@
 // If BACKEND_URL is set (the FastAPI backend), requests are proxied to it; otherwise the built-in
 // reference API (lib/app.mjs) answers. Switching = set/remove one env var in Vercel and redeploy.
 import { handleApi } from "../lib/app.mjs";
+import { bridge } from "../lib/bridge.mjs";
 
 export default async function handler(req, res) {
   const backend = process.env.BACKEND_URL?.replace(/\/$/, "");
   if (!backend) return handleApi(req, res);
+  if (req.url.startsWith("/api/index")) req.url = req.headers["x-forwarded-uri"] || req.headers["x-original-url"] || req.headers["x-invoke-path"] || req.url;
+  if (await bridge(req, res, backend)) return; // routes the backend does not implement yet
   try {
     let body;
-    if (req.method !== "GET" && req.method !== "HEAD") body = req.body === undefined ? undefined : typeof req.body === "string" ? req.body : JSON.stringify(req.body);
-    let path = req.url;
-    if (path.startsWith("/api/index")) path = req.headers["x-forwarded-uri"] || req.headers["x-original-url"] || req.headers["x-invoke-path"] || path;
+    if (req.method !== "GET" && req.method !== "HEAD") {
+      if (req.body !== undefined) body = typeof req.body === "string" ? req.body : JSON.stringify(req.body);
+      else { const chunks = []; for await (const c of req) chunks.push(c); body = Buffer.concat(chunks).toString("utf8") || undefined; } // local server: raw stream
+    }
+    const path = req.url;
     const r = await fetch(backend + path, { method: req.method, headers: { "content-type": req.headers["content-type"] || "application/json" }, body });
     res.statusCode = r.status;
     for (const h of ["content-type", "content-disposition"]) if (r.headers.get(h)) res.setHeader(h, r.headers.get(h));

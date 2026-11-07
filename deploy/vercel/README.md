@@ -10,3 +10,16 @@ Switch:
 2. Vercel → cqa-bioc → Settings → Environment Variables → add `BACKEND_URL` → Redeploy.
 
 Roll back: delete `BACKEND_URL` → Redeploy.
+
+
+## Connecting the team FastAPI backend (branch `backend`)
+1. Deploy the backend anywhere with HTTPS and a persistent disk (`CQA_DATABASE_PATH` on that disk),
+   with `CQA_API_URL`, `LLM_API_KEY`, `LLM_BASE_URL`, `LLM_MODEL`, `LLM_PRICE_IN`, `LLM_PRICE_OUT` in its environment.
+2. `node tools/seed-backend.mjs https://<backend>` — creates the chat / call checklist sets and loads DEV (idempotent).
+3. `node tools/check-backend.mjs https://<backend>` through the bridge, e.g. locally:
+   `BACKEND_URL=https://<backend> npm start` then `node tools/check-backend.mjs http://localhost:3000`.
+4. Vercel → Environment Variables → `BACKEND_URL=https://<backend>` → Redeploy. Remove it to fall back to the built-in API.
+
+`lib/bridge.mjs` answers the routes the backend does not have yet (`/api/health`, `/api/groups`, audio,
+`/api/export`, gross-error flag/reason and `?gross=1`) from the backend's own data; everything else is proxied.
+CORS is not needed: the browser only talks to the Vercel domain.

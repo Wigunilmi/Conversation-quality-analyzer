@@ -3,6 +3,7 @@ import http from "node:http";
 import fs from "node:fs";
 import path from "node:path";
 import { handleApi } from "./lib/app.mjs";
+import apiHandler from "./api/index.mjs";
 import { backend } from "./lib/store.mjs";
 
 const PORT = Number(process.env.PORT || 3000);
@@ -11,7 +12,7 @@ const MIME = { ".html": "text/html; charset=utf-8", ".js": "text/javascript; cha
 
 http.createServer(async (req, res) => {
   const url = new URL(req.url, "http://x");
-  if (url.pathname.startsWith("/api/")) return handleApi(req, res);
+  if (url.pathname.startsWith("/api/")) return apiHandler(req, res); // BACKEND_URL set → FastAPI (+ bridge), else built-in API
   const f = path.join(WEB, url.pathname === "/" ? "index.html" : path.normalize(url.pathname).replace(/^(\.\.[/\\])+/, ""));
   if (!f.startsWith(WEB) || !fs.existsSync(f) || fs.statSync(f).isDirectory()) { res.writeHead(404); return res.end("not found"); }
   res.writeHead(200, { "content-type": MIME[path.extname(f)] || "application/octet-stream", "cache-control": "no-cache" });
