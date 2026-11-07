@@ -202,6 +202,6 @@ def test_migration_and_seed_are_repeatable(database):
     migrate(database)
     seed_demo(database)
     with connect(database) as connection:
-        assert connection.execute("PRAGMA user_version").fetchone()[0] == 2
+        assert connection.execute("PRAGMA user_version").fetchone()[0] == 3
         assert connection.execute("SELECT COUNT(*) FROM conversations").fetchone()[0] == 1
         assert connection.execute("SELECT COUNT(*) FROM checklist_versions").fetchone()[0] == 1

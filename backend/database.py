@@ -32,7 +32,7 @@ def migrate(path):
     path.parent.mkdir(parents=True, exist_ok=True)
     with connect(path) as connection:
         version = connection.execute("PRAGMA user_version").fetchone()[0]
-        if version > 2:
+        if version > 3:
             raise RuntimeError("Database schema is newer than this application")
         if version == 0:
             sql = (Path(__file__).parent / "migrations" / "001_evaluations.sql").read_text(encoding="utf-8")
@@ -40,6 +40,10 @@ def migrate(path):
             version = 1
         if version == 1:
             sql = (Path(__file__).parent / "migrations" / "002_checklist_metadata.sql").read_text(encoding="utf-8")
+            connection.executescript(sql)
+            version = 2
+        if version == 2:
+            sql = (Path(__file__).parent / "migrations" / "003_appeals.sql").read_text(encoding="utf-8")
             connection.executescript(sql)
 
 

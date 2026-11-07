@@ -177,4 +177,4 @@ def test_migrate_existing_v1_preserves_versions_and_evaluations(database):
         assert connection.execute("SELECT id FROM evaluations").fetchone()[0] == saved["id"]
         assert connection.execute("SELECT created_at FROM checklist_version_metadata").fetchone()[0] is None
         assert connection.execute("SELECT COUNT(*) FROM evaluation_results").fetchone()[0] == 8
-        assert connection.execute("PRAGMA user_version").fetchone()[0] == 2
+        assert connection.execute("PRAGMA user_version").fetchone()[0] == 3

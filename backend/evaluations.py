@@ -42,6 +42,14 @@ def load_context(path, conversation_id):
             "checklist": json.loads(row["checklist"])}
 
 
+def appeal_view(row):
+    appeal = {key: row[key] for key in ("id", "evaluation_id", "criterion_id", "comment", "author", "status", "created_at")}
+    appeal["original"] = json.loads(row["original"])
+    if row["decision"] is not None:
+        appeal["decision"] = json.loads(row["decision"])
+    return appeal
+
+
 def evaluation_view(connection, row):
     """Read stored criteria and their historical checklist; never use the active version."""
     evaluation = json.loads(row["metadata"])
@@ -51,9 +59,20 @@ def evaluation_view(connection, row):
         "SELECT checklist FROM checklist_versions WHERE checklist_id = ? AND version = ?",
         (row["checklist_id"], row["checklist_version"]),
     ).fetchone()["checklist"])
-    # Appeals storage is not implemented yet; original and final results are identical.
-    return {**evaluation, "results": results, "appeals": [], "final_results": results,
-            "totals": compute_totals(checklist, results), "original_totals": compute_totals(checklist, results),
+    appeals = [appeal_view(appeal) for appeal in connection.execute(
+        "SELECT * FROM appeals WHERE evaluation_id = ? ORDER BY rowid", (row["id"],))]
+    # Match the reference View: the first changed appeal for each criterion supplies its override.
+    changes = {}
+    for appeal in appeals:
+        if appeal["status"] == "changed":
+            changes.setdefault(appeal["criterion_id"], appeal)
+    final_results = []
+    for result in results:
+        appeal = changes.get(result["criterion_id"])
+        final_results.append({**result, **appeal["decision"]["result"], "overridden": True, "appeal_id": appeal["id"]}
+                             if appeal else dict(result))
+    return {**evaluation, "results": results, "appeals": appeals, "final_results": final_results,
+            "totals": compute_totals(checklist, final_results), "original_totals": compute_totals(checklist, results),
             "checklist": checklist, "low_confidence": [result["criterion_id"] for result in results
                 if result.get("confidence") is not None and result["confidence"] < 0.67]}
 
