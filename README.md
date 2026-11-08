@@ -152,7 +152,9 @@ npm start                 # http://localhost:3000, данные в ./data
 
 ## 4. Финальная (контрольная) группа — `FBroker`
 
-Контрольный набор: **10 чатов, `group_id = FBroker`**. 08.11.2026 бэкендер загрузил его в FastAPI (база Neon).
+Контрольный набор: **10 чатов, `group_id = FBroker`**. Статус на 08.11.2026: загружен в FastAPI (база Neon) и **уже оценён**;
+осталось проверить сохранённые оценки (шаг 4), выгрузить `results/prod/results.json` (шаг 5) и закоммитить его в `main` (шаг 6).
+Шаги 2–3 нужны только для повторной загрузки или доценки.
 Оценки и выгрузка делаются там, где лежат эти данные: через фронт, подключённый к FastAPI (`BACKEND_URL` + `BACKEND_TOKEN`,
 раздел 1). Если сайт работает на запасном API (`/api/health` → `"store":"supabase"`), набор нужно загрузить и туда (шаг 2).
 
@@ -179,7 +181,7 @@ npm start                 # http://localhost:3000, данные в ./data
 ## Результаты (`results/`)
 
 - [`results/dev/results.json`](./results/dev/results.json) — DEV: 60 чатов и 5 звонков, 65 записей.
-- `results/prod/results.json` — контрольный набор `FBroker`, 10 чатов; добавляется по шагам раздела 4.
+- `results/prod/results.json` — контрольный набор `FBroker`, 10 чатов (оценены); файл добавляется в `main` по шагам 4–6 раздела 4.
 
 Обновить DEV-файл: `node tools/export-results.mjs https://cqa-bioc.vercel.app --group DEV --out results/dev/results.json --expected 65`.
 
