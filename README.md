@@ -1,59 +1,41 @@
-# CQA: Conversation Quality Analytics · team BioC
+# CQA · frontend (ветка `frontend`)
 
-A prototype for Freedom Broker that scores operator conversations (chats and calls in RU / KZ / EN) against configurable checklists. Every score comes with an explanation and a link to the exact message (or the moment in the call recording), can be appealed, and is reviewed by a human.
+Интерфейс и серверный прокси. Общая инструкция — запуск, подключение к FastAPI, проверка, финальная группа —
+в [главном README (ветка main)](https://github.com/Wigunilmi/data-challenge-bioc-team/blob/main/README.md).
 
-## What it does (strictly the Student Guide and the checklist)
-- **Checklist setup.** Add and edit criteria: wording, weight, answer type (Yes/No or scale with steps), whether N/A is allowed and its rule, sections, the gross-error flag. Every save becomes a new version that applies to new evaluations. Chats and calls have their own checklists (the call one adapts the official checklist to speech, per Freedom Broker's clarification).
-- **Evaluation.** Load a set by `group_id` (DEV or the control set) or upload a transcript by hand, pick a checklist (or let it be chosen by channel), and run the evaluation. RU / KZ / EN. Bot and system lines are context only.
-- **Result.** For each criterion the card shows the answer, points, weight, explanation and evidence message; for a missed action, the part of the dialog that was checked; for N/A, the reason. It also shows the total, section totals and the gross-error flag. Scores are computed by code: scale steps weighted, N/A weight redistributed, rounded to 2 decimals, no total when every weighted criterion is N/A.
-- **Card.** Clicking the evidence scrolls to the message. For a call, the embedded player jumps to that moment.
-- **Appeal and review.** An appeal targets one criterion and carries a comment. The reviewer sees the disputed score, the comment and the dialog fragment, then upholds or changes it with a reason. The total is recomputed, and the card keeps the original score, the decision and the final score.
-- **Model and cost.** Any OpenAI-compatible API. Model name and cost per evaluation (all calls included) are shown on the card.
-- **UI.** Plain HTML/CSS/JS with one module per screen, so it can be adapted as a Dynamics 365 HTML web resource. No login.
-
-## Run
-```bash
-cp .env.example .env      # CQA_API_URL = organizers' GET link without group_id; LLM_* = model
-npm start                 # http://localhost:3000 (Node 22.9+, no npm deps); data in ./data
-npm test                  # JS scoring tests
-cd backend && python -m pytest -q   # Python parity tests (scoring, facts, prompt)
-```
-Without `LLM_API_KEY` the app runs in **MOCK** mode (rules over the same facts), so the UI works offline.
-
-Storage: local JSON files by default; set `SUPABASE_URL` + `SUPABASE_KEY` to use Postgres (table `cqa_docs`, required on Vercel).
-
-Deploy: `vercel.json` serves `web/` and runs the API as a function (`api/index.mjs`).
-
-Model settings: `LLM_BASE_URL`, `LLM_MODEL`, `LLM_API_KEY`, `LLM_VOTES`, `LLM_CONCURRENCY`, `LLM_PRICE_IN` / `LLM_PRICE_OUT` (USD per 1M tokens, used to estimate cost per evaluation).
-
-## Model and cost
-Meta **Muse Spark 1.3** via the Meta API (`muse-spark-1.3`, `reasoning_effort: low`), external API.
-One evaluation = 1 model call (+1 repair call only if the answer breaks the format): about **$0.01–0.03** and 20–55 s per dialog
-($1.25 / $4.25 per 1M input/output tokens). Facts (timings, greeting, system events) and the total are computed in code.
-
-## Results files (appendix «Как сдать результаты», JSON 1.0)
-```
-node tools/export-results.mjs https://cqa-bioc.vercel.app --group DEV  --out results/dev/results.json  --expected 65
-node tools/export-results.mjs https://cqa-bioc.vercel.app --group <PROD> --out results/prod/results.json --expected 10
-```
-The script exports the latest evaluation of every dialog (decided appeals applied), validates the format
-(8 criteria once each, allowed values, 1-based `evidence_turns`, `critical_flag` = `critical`, no duplicate IDs)
-and exits non-zero on any problem. Not-evaluated dialogs are written as `status: "error"`, never as zero.
-The same file is available in the UI (button «⤓ results.json») and at `GET /api/export?group=…`.
-
-## Accessibility and themes
-Two one-click modes in the sidebar: **Слабое зрение** (text 130 %, high contrast, thick borders, underlined links)
-and **Дальтонизм** (Okabe–Ito blue / orange instead of green / red, meaning duplicated by ✓ ◐ ✗ icons).
-«🔊 Озвучить» on a dialog card reads the total, gross errors and every verdict aloud (Web Speech API).
-Light / dark / system theme; Freedom Finance palette (#51AF3D, #0F5431). Skip link, visible focus, keyboard navigation.
-
-## Layout
-| Path | What |
+## Состав
+| Путь | Что |
 |---|---|
-| `web/` | UI: `screens/dashboard, list, card, checklists, appeals`, `lib/api.js` |
-| `server.mjs` | reference API (Node); contract in `API_CONTRACT.md` |
-| `lib/` | `facts.mjs`, `evaluator.mjs`, `scoring.mjs`, `store.mjs` |
-| `prompts/` | judge prompt shared by JS and Python |
-| `checklists/` | `chat.json` (official checklist), `call.json` (speech adaptation) |
-| `backend/cqa/` | Python: `scoring.py`, `sanitize.py`, `facts.py`, `evaluator.py`, `audio.py` |
-| `test/fixtures/` | parity fixtures generated from the JS reference |
+| `web/` | UI без фреймворка: `screens/list.js` (диалоги, загрузка набора/диалогов, батч), `card.js` (оценка, доказательства, апелляции), `checklists.js` (редактор и версии), `appeals.js` (проверяющий); `lib/api.js`, `lib/prefs.js` (тема, режимы «Слабое зрение» / «Дальтонизм») |
+| `api/index.mjs` | Vercel-функция: при `BACKEND_URL` проксирует `/api/*` в FastAPI с `Authorization: Bearer $BACKEND_TOKEN`, иначе отвечает встроенный API |
+| `lib/bridge.mjs` | маршруты, которых нет в FastAPI: `/api/health`, `/api/groups`, аудио, `/api/export`, флаг грубой ошибки и `?gross=1` |
+| `server.mjs`, `lib/app.mjs`, `lib/store.mjs` | локальный сервер и запасной встроенный API (файлы `./data` или Supabase) |
+| `lib/evaluator.mjs`, `lib/facts.mjs`, `lib/scoring.mjs`, `lib/results.mjs`, `prompts/`, `checklists/` | оценщик встроенного API, подсчёт итога, формат results.json |
+| `tools/` | `seed-backend.mjs`, `check-backend.mjs`, `export-results.mjs`, `review.mjs`, `accuracy.mjs` |
+| `backend/` | Python-порт оценщика для тестов паритета ([README](./backend/README.md)); рабочий FastAPI — ветка `backend` |
+| `API_CONTRACT.md` | контракт API фронт ⇄ бэк |
+
+## Команды (из корня ветки, Node 22.9+, без npm-зависимостей)
+```bash
+npm start                                    # http://localhost:3000; читает .env, если он есть
+BACKEND_URL=http://127.0.0.1:8000 npm start  # фронт поверх локального FastAPI
+npm test                                     # JS-тесты подсчёта итога
+node tools/seed-backend.mjs <api>            # чек-листы чатов/звонков + загрузка DEV в чистый бэкенд
+node tools/check-backend.mjs <api>           # 12 шагов контракта; переключать только при «0 failed»
+node tools/export-results.mjs <site> --group DEV --out results/dev/results.json --expected 65
+```
+
+## Переменные окружения (значения не коммитятся; `.env` в `.gitignore`)
+| Переменная | Назначение |
+|---|---|
+| `BACKEND_URL`, `BACKEND_TOKEN` | адрес FastAPI и его сервисный токен (`API_AUTH_TOKEN`); токен используется только на сервере |
+| `PORT` | порт локального сервера, по умолчанию 3000 |
+| `CQA_API_URL` | GET-ссылка организаторов без `group_id` — для встроенного API |
+| `LLM_API_KEY`, `LLM_BASE_URL`, `LLM_MODEL`, `LLM_PRICE_IN`, `LLM_PRICE_OUT`, `LLM_CONCURRENCY`, `LLM_VOTES`, `LLM_REASONING_EFFORT` | модель встроенного API; без ключа — MOCK |
+| `SUPABASE_URL`, `SUPABASE_KEY` | хранилище встроенного API на Vercel (иначе файлы `./data`) |
+
+Шаблон — [`.env.example`](./.env.example). Деплой и переключение встроенный API ⇄ FastAPI — [deploy/vercel/README.md](./deploy/vercel/README.md).
+
+## Модель и стоимость
+Meta Muse Spark 1.3 (`muse-spark-1.3`, `reasoning_effort: low` во встроенном API): один вызов модели + максимум один
+повтор при ошибке формата, ≈ $0.01–0.03 и 20–55 с на диалог ($1.25 / $4.25 за 1M токенов). Факты и итог считаются кодом.

@@ -1,22 +1,15 @@
-# FastAPI backend (port of `server.mjs`)
+# backend/ в ветке frontend — Python-порт оценщика (тесты паритета)
 
-Reference implementation is the Node server in the repo root. Keep the `/api/...` contract identical so `web/` needs no changes, then delete `server.mjs` + `lib/`.
-
-Already ported, with parity tests against the JS output (`python -m pytest -q` → 479 passed):
-- `cqa/scoring.py`: `compute_totals`, `normalize`, `is_critical_fail`, `round_score` (half-up like JS, not Python's banker's `round`), `snap`, `validate_checklist`
-- `cqa/sanitize.py`: cleans the LLM answer (N/A only where allowed, valid evidence ids, scale snapped to allowed steps) and returns the problems that trigger one repair retry
+Это не рабочий сервер. Здесь лежит Python-порт модулей встроенного Node-API (`cqa/scoring.py`, `sanitize.py`, `facts.py`,
+`evaluator.py`, `audio.py`) и тесты, которые сверяют его с JS-эталоном по фикстурам `../test/fixtures/`.
+Рабочий FastAPI — в ветке [`backend`](https://github.com/Wigunilmi/data-challenge-bioc-team/tree/backend);
+общая инструкция — в [главном README](https://github.com/Wigunilmi/data-challenge-bioc-team/blob/main/README.md).
 
 ```bash
 cd backend
-pip install pytest fastapi uvicorn
-python -m pytest -q          # 479 tests: scoring, facts and prompt parity with JS + scenarios
+python3 -m pip install pytest
+python3 -m pytest -q           # 480 passed (проверено 08.11.2026, Python 3.13)
 ```
 
-If you change `lib/scoring.mjs` before deleting it, regenerate fixtures with `node test/gen-parity.mjs`.
-
-Also ready: `cqa/facts.py` (deterministic facts), `cqa/evaluator.py` (prompt from `/prompts`, LLM call with retries, repair retry, voting, MOCK), `cqa/audio.py` (resolve the mp3).
-
-Still to do in FastAPI: the routes and storage from `API_CONTRACT.md`. Notes:
-- totals are **not stored**: compute them on read from `results` plus decided appeals (`view()` in server.mjs)
-- every evaluation stores `checklist_version`
-- static files: mount `web/` at `/`
+После изменений в `lib/scoring.mjs`, `lib/facts.mjs` или `prompts/` перегенерируйте фикстуры из корня ветки:
+`node test/gen-parity.mjs`, `node test/gen-facts.mjs`, `node test/gen-prompts.mjs`.

@@ -1,26 +1,25 @@
-# Vercel: switching between the built-in API and the FastAPI backend
+# Vercel: сайт фронта и переключение встроенный API ⇄ FastAPI
 
-The site (`web/`) and the API function (`api/index.mjs`) are deployed from the repo root (`vercel.json`).
+Проект Vercel собирается из корня ветки `frontend` по `vercel.json`: статика `web/`, функция `api/index.mjs`
+(`maxDuration` 300 с, регион `fra1`), rewrite `/api/*` → `/api/index`. Общая инструкция — в
+[главном README](https://github.com/Wigunilmi/data-challenge-bioc-team/blob/main/README.md).
 
-- **No `BACKEND_URL`:** the built-in reference API answers (backup "stub", data in Supabase).
-- **`BACKEND_URL=https://backend-host`:** every `/api/*` request is proxied to the FastAPI backend.
+| Режим | Переменные проекта фронта |
+|---|---|
+| FastAPI (основной) | `BACKEND_URL` = адрес FastAPI без `/api`; `BACKEND_TOKEN` = его `API_AUTH_TOKEN` (Sensitive) |
+| Встроенный API (запасной) | без `BACKEND_URL`; `SUPABASE_URL`, `SUPABASE_KEY`, `CQA_API_URL`, `LLM_*` |
 
-Switch:
-1. `node tools/check-backend.mjs https://backend-host` must print `0 failed`.
-2. Vercel → cqa-bioc → Settings → Environment Variables → add `BACKEND_URL` → Redeploy.
+Токен подставляется на сервере в `Authorization: Bearer …` и в браузер не попадает, поэтому CORS бэкенда для этого сайта не нужен.
 
-Roll back: delete `BACKEND_URL` → Redeploy.
+## Включить FastAPI
+1. Чистый бэкенд подготовить один раз: `node tools/seed-backend.mjs <api>` — чек-листы чатов и звонков с привязкой к каналам и загрузка DEV
+   (идемпотентно). Для бэкенда с токеном запускайте через фронт, где задан `BACKEND_TOKEN`, например `http://localhost:3000`.
+2. Проверить контракт через фронт: `BACKEND_URL=<api> BACKEND_TOKEN=… npm start`, затем `node tools/check-backend.mjs http://localhost:3000`.
+   Переключать только при `0 failed`; известный пропуск — ручная загрузка диалога (в FastAPI нет `POST /api/conversations`, прокси отвечает 501).
+3. Vercel → Settings → Environment Variables → `BACKEND_URL`, `BACKEND_TOKEN` → **Redeploy**.
+4. Проверить: `https://<сайт>/api/health` → `"store":"backend","backend":"ok"`.
 
+**Откат:** удалить `BACKEND_URL` → Redeploy.
 
-## Connecting the team FastAPI backend (branch `backend`)
-1. Deploy the backend anywhere with HTTPS and a persistent disk (`CQA_DATABASE_PATH` on that disk),
-   with `CQA_API_URL`, `LLM_API_KEY`, `LLM_BASE_URL`, `LLM_MODEL`, `LLM_PRICE_IN`, `LLM_PRICE_OUT` in its environment.
-2. `node tools/seed-backend.mjs https://<backend>` — creates the chat / call checklist sets and loads DEV (idempotent).
-3. `node tools/check-backend.mjs https://<backend>` through the bridge, e.g. locally:
-   `BACKEND_URL=https://<backend> npm start` then `node tools/check-backend.mjs http://localhost:3000`.
-4. Vercel → Environment Variables → `BACKEND_URL=https://<backend>` and `BACKEND_TOKEN=<the backend API_AUTH_TOKEN>` (Sensitive) → Redeploy. Remove `BACKEND_URL` to fall back to the built-in API.
-   The token is added server-side as `Authorization: Bearer …`; the browser never sees it, so the backend needs no CORS for this site.
-
-`lib/bridge.mjs` answers the routes the backend does not have yet (`/api/health`, `/api/groups`, audio,
-`/api/export`, gross-error flag/reason and `?gross=1`) from the backend's own data; everything else is proxied.
-CORS is not needed: the browser only talks to the Vercel domain.
+`lib/bridge.mjs` отвечает на маршруты, которых в FastAPI пока нет (`/api/health`, `/api/groups`, аудио, `/api/export`,
+флаг/причина грубой ошибки в списке и `?gross=1`), из данных самого FastAPI; остальные запросы проксируются без изменений.
