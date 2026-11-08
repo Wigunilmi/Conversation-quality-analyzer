@@ -1,8 +1,9 @@
 from contextlib import asynccontextmanager
 import os
 
-from fastapi import FastAPI
+from fastapi import FastAPI, Security
 from fastapi.middleware.cors import CORSMiddleware
+from fastapi.security import HTTPBearer
 from starlette.concurrency import run_in_threadpool
 
 from backend.database import database_path, migrate
@@ -37,12 +38,12 @@ def create_app(db_path=None, organizers_transport=None):
     application = FastAPI(lifespan=lifespan)
     application.state.database_path = db_path if db_path is not None else database_path()
     application.state.organizers_transport = organizers_transport
-    application.include_router(router)
-    application.include_router(groups_router)
-    application.include_router(conversations_router)
-    application.include_router(checklists_router)
-    application.include_router(batch_router)
-    application.include_router(appeals_router)
+    bearer = HTTPBearer(scheme_name="BearerAuth", auto_error=False,
+                        description="API service token. Enter only the token; Swagger UI adds the Bearer prefix.")
+    # This dependency documents/extracts the header only. The existing middleware
+    # remains responsible for validating the token and preserving local no-token mode.
+    for api_router in (router, groups_router, conversations_router, checklists_router, batch_router, appeals_router):
+        application.include_router(api_router, dependencies=[Security(bearer)])
     if token:
         application.add_middleware(ApiTokenMiddleware, token=token)
     if origin:

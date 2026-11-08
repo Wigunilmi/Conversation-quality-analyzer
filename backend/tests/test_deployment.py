@@ -78,3 +78,33 @@ def test_main_entrypoint_does_not_open_database_on_import(monkeypatch):
     application = create_app()
     assert isinstance(application.state.database_path, PostgresDatabase)
     assert "/api/conversations" in application.openapi()["paths"]
+
+
+@pytest.mark.parametrize("authenticated", [False, True])
+def test_bearer_openapi_for_api_only_preserves_middleware(monkeypatch, tmp_path, authenticated):
+    monkeypatch.delenv("VERCEL", raising=False)
+    if authenticated:
+        monkeypatch.setenv("API_AUTH_TOKEN", TOKEN)
+    else:
+        monkeypatch.delenv("API_AUTH_TOKEN", raising=False)
+    with TestClient(create_app(tmp_path / "docs.sqlite3")) as client:
+        assert client.get("/docs").status_code == 200
+        response = client.get("/openapi.json")
+        assert response.status_code == 200
+        schema = response.json()
+        bearer = schema["components"]["securitySchemes"]["BearerAuth"]
+        assert bearer["type"] == "http" and bearer["scheme"] == "bearer"
+        assert "bearerFormat" not in bearer  # The service token is opaque, not a JWT.
+        for path, operations in schema["paths"].items():
+            for method, operation in operations.items():
+                if method not in {"get", "post", "put", "patch", "delete", "head", "options"}:
+                    continue
+                if path.startswith("/api/"):
+                    assert operation["security"] == [{"BearerAuth": []}]
+                else:
+                    assert "security" not in operation
+        assert TOKEN not in response.text
+        assert client.get("/health").status_code == 200
+        assert client.get("/api/conversations").status_code == (401 if authenticated else 200)
+        assert client.get("/api/conversations", headers={"Authorization": "Bearer wrong"}).status_code == (401 if authenticated else 200)
+        assert client.get("/api/conversations", headers={"Authorization": "Bearer " + TOKEN}).status_code == 200
