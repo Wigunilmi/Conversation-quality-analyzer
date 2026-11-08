@@ -1,4 +1,23 @@
-# data-challenge-bioc-team
+# CQA · backend (ветка `backend`, FastAPI)
+
+Серверная часть: `main.py` (`main:app`), маршруты в `backend/`, оценщик `backend/cqa/`, миграции SQLite и Postgres,
+тесты `backend/tests/`. Общая инструкция — запуск всей системы, подключение фронта, проверка, финальная группа — в
+[главном README (ветка main)](https://github.com/Wigunilmi/data-challenge-bioc-team/blob/main/README.md).
+Задеплоенный API: `https://data-challenge-bioc-team.vercel.app` (публичны `/health` и `/docs`, `/api/*` — по Bearer-токену).
+
+## Быстрый старт (macOS / Linux, из корня ветки)
+
+```bash
+python3 -m venv .venv
+.venv/bin/python -m pip install -r requirements.txt
+.venv/bin/python -m uvicorn main:app --reload --host 127.0.0.1 --port 8000   # SQLite data/cqa.sqlite3, без токена, MOCK без LLM_API_KEY
+curl http://127.0.0.1:8000/health                                           # {"status":"ok"}; Swagger: http://127.0.0.1:8000/docs
+cd backend && PYTHONUTF8=1 ../.venv/bin/python -m pytest -q                 # тесты
+```
+
+Для загрузки групп задайте `CQA_API_URL` (GET-ссылка организаторов без `group_id`); чек-листы чатов и звонков в чистую
+базу добавляет `node tools/seed-backend.mjs http://127.0.0.1:8000` из ветки `frontend`. Команды для Windows PowerShell — ниже.
+Переменные окружения перечислены в [DEPLOY_VERCEL.md](./DEPLOY_VERCEL.md#имена-переменных-окружения).
 
 ## Vercel и Neon
 
@@ -10,30 +29,17 @@ SQLite. На Vercel SQLite запрещён, миграции Postgres запу�
 через Bearer-заголовок. На Vercel оба параметра обязательны. Локально без токена
 API сохраняет прежний доступ. Ключи, токены и строки подключения не печатаются.
 
-## Проверка чистого клона и передача фронтендеру
+## Проверка чистого клона
 
-07.11.2026 проверен отдельный чистый локальный клон коммита `f0d9953`: новое venv,
-установка из `requirements.txt`, старт Uvicorn, автоматические миграции и команды
-из этого README. Проверенная версия Python — 3.14.6. Полный прогон в новом
-окружении: **556 passed**, одно предупреждение Starlette.
+08.11.2026 чистый клон ветки (коммит `e32ef42`) проверен на Linux с Python 3.13: установка из `requirements.txt`,
+`pytest` — **568 passed, 3 skipped** (интеграция Postgres пропускается без `TEST_DATABASE_URL`), запуск Uvicorn,
+`/health`, `/docs`, OpenAPI со схемой `BearerAuth`; через фронт — загрузка DEV, список, карточка, оценка и батч в MOCK-режиме.
+07.11.2026 проверка на Windows / Python 3.14.6 (коммит `f0d9953`): **556 passed**.
 
-Начало работы из нового клона:
-
-```powershell
-git clone <REPO_URL> cqa-backend
-Set-Location cqa-backend
-```
-
-Замените `<REPO_URL>` адресом репозитория, затем выполните установку и запуск ниже.
-Чистая БД создаётся автоматически; до импорта/синтетического seed список пуст.
-Локальные `.venv`, `.tmp`, база, ключи и GET-ссылка организаторов из старой папки
-не требуются для старта. Без ключа оценки работают в MOCK-режиме.
-
-[Короткий чек-лист для фронтендера](./FRONTEND_CHECKLIST.md) содержит сценарий
-приёмки, базовый URL после деплоя, CORS и список расхождений с контрактом.
-Основные готовые сценарии проверены через HTTP, но реализованы пока 12 из 19
-маршрутов контракта. CORS включается через `FRONTEND_ORIGIN`; для прямого браузерного
-доступа настройте точный origin и Bearer-авторизацию либо используйте BFF/proxy.
+[Чек-лист приёмки для фронтендера](./FRONTEND_CHECKLIST.md): сценарий приёмки на синтетической группе и сверка с контрактом.
+Реализовано 12 маршрутов контракта; недостающие (`/api/health`, `/api/groups`, аудио, `/api/export`, ручная загрузка
+`POST /api/conversations`) фронт закрывает своим прокси, кроме ручной загрузки. Фронт ходит в API через серверный прокси
+с Bearer-токеном, поэтому браузеру CORS не нужен; `FRONTEND_ORIGIN` нужен для прямых браузерных вызовов.
 
 ## Минимальный бэкенд FastAPI
 

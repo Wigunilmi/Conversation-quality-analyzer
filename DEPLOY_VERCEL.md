@@ -1,5 +1,8 @@
 # FastAPI на Vercel и Postgres на Neon
 
+Общая инструкция и подключение фронта — в [главном README](https://github.com/Wigunilmi/data-challenge-bioc-team/blob/main/README.md).
+Задеплоено: `https://data-challenge-bioc-team.vercel.app`.
+
 Деплой выполняется вручную владельцем проекта. Код JSON API не меняется;
 авторизованные вызовы получают прежние тела ответов. База SQLite и её данные
 не переносятся в Neon автоматически.
