@@ -1,5 +1,8 @@
 # ML — оценка диалогов (CQA, Freedom Broker)
 
+Общая инструкция — в [главном README](https://github.com/Wigunilmi/data-challenge-bioc-team/blob/main/README.md).
+Этот код — эталон на JS; на сайте он работает во встроенном API ветки `frontend`, Python-версия — в ветке `backend` (`backend/cqa/`).
+
 Модель: **Meta Muse Spark 1.3** (`https://api.meta.ai/v1`, `muse-spark-1.3`, `reasoning_effort: low`).
 ≈ $0.01–0.03 и 20–55 с на одну оценку (один вызов модели + максимум один повтор при ошибке формата).
 
@@ -11,12 +14,14 @@
 
 Чек-листы: `checklists/chat.json` (официальные 8 критериев), `checklists/call.json` (адаптация под устную речь).
 
-## Проверка качества
+## Проверка качества (из папки `ml/`, Node 22.9+)
+```bash
+cd ml
+node tools/review.mjs https://cqa-bioc.vercel.app            # распределения ответов, грубые ошибки, стоимость; --evaluate — сначала переоценить
+node tools/accuracy.mjs labels/dev-gold.json https://cqa-bioc.vercel.app   # сравнение с эталонной разметкой
 ```
-node tools/review.mjs https://cqa-bioc.vercel.app [--evaluate]   # распределения, грубые ошибки, стоимость
-node tools/accuracy.mjs labels/dev-gold.json https://cqa-bioc.vercel.app
-```
-DEV (65 диалогов): грубые ошибки 4/4, ложных 0; против черновой разметки 13 диалогов — средняя разница итога ≈ 2 балла.
-`labels/dev-gold.json` — черновая разметка, требует проверки ML.
+Вместо адреса сайта можно указать `http://localhost:3000` (запуск фронта — в главном README).
+Цифры зависят от последнего прогона: 07.11.2026 на DEV грубые ошибки найдены 4/4 без ложных, средняя разница итога с
+черновой разметкой ≈ 2 балла; при проверке 08.11.2026 — 7 из 13 полностью совпавших диалогов, флаг грубой ошибки 13/13.
+`labels/dev-gold.json` — черновая разметка, требует проверки ML ([формат](./labels/README.md)).
 
-Python-порт оценщика — в ветке `backend` (`backend/cqa/`), промпты общие.
